@@ -1,0 +1,36 @@
+#Alice and Bob are at it again, this time playing a game where each player has to take a stone from the left or right and and add the sum of the rest of the stones together.
+#Because the game is inherently unfair, Bob is playing to lose by as few as possible and Alice is trying to win by as much as possible.
+#This is best solved with a top-down dynamic programming approach which I will get more in depth later.
+
+class Solution:
+    def stoneGameVII(self, stones: List[int]) -> int:
+        N = len(stones)
+        #We will define our N+1 by N+1 matrix to save any values we need to use later, this will save some computational time.
+        dp = [[0 for i in range(N+1)] for j in range(N+1)]
+        
+        #The idea here is that we want to iterate through all possible permutations of taking either the left or right stone all the way down to the bottom.
+        #Alice and Bob might have different goals in mind but their way to get there is the same, maximize the difference between the sum they can achieve while minimizing
+        #the sum the other can achieve.
+        def goDeeper(left, right, stones, sum):
+            #If left is equal to right, than we have reached the end of the game since there are no stones left.
+            if left == right:
+                return 0
+            #This is if we have already calculated this value, we can simply return it. Working on a board near the end will guarantee that this comes in handy at least once.
+            if dp[left][right] != 0:
+                return dp[left][right]
+            #This is fairly self-explanatory and where the loop function comes in handy, we can either pick from the right or left which will shorten the stones array and continue
+            #Us down the game. This will recurse all the way until there are no more stones, so in this way, the complexity will end up being O(N^2) because we need to check
+            #every possible combination in order to find the best solution for both players, if they are both playing optimally.
+            goRight = sum - stones[left] - goDeeper(left+1, right, stones, sum - stones[left])
+            goLeft = sum - stones[right] - goDeeper(left, right - 1, stones, sum - stones[right])
+            
+            #Again, storing this later so that we can use it in the future.
+            dp[left][right] = max(goLeft, goRight)
+            
+            #We return the maximum since this is what both players are ultimately trying to to do.
+            return dp[left][right]
+        
+        #We start with the total sum of stones, this won't impact any of the players scores but it is useful to not have to recalculate this number every time we go through
+        #The loop of recursion all the way down to the end of the game.
+        totalSum = sum(stones)
+        return goDeeper(0, N-1, stones, totalSum)
